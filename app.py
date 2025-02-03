@@ -25,7 +25,8 @@ def obtenir_noticies():
     resposta_2 = requests.get(url_2)
     
     if resposta_2.status_code != 200:
-        return {"error": "Error en obtenir les segones notícies"}, 500
+        # Afegim informació extra de la resposta per poder diagnosticar l'error
+        return {"error": f"Error en obtenir les segones notícies. Detalls: {resposta_2.text}"}, 500
 
     dades_2 = resposta_2.json()
     articles_2 = dades_2.get("articles", [])
