@@ -17,7 +17,7 @@ from flask import Flask, jsonify
 app = Flask(__name__)
 
 # La teva API Key de NewsAPI
-API_KEY = "import os
+API_KEY = os.getenv("NEWSAPI_KEY")
 import requests
 from flask import Flask, jsonify
 
