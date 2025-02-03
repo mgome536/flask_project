@@ -1,6 +1,7 @@
 import os
 import requests
-from flask import Flask, jsonify
+import json
+from flask import Flask, Response
 
 app = Flask(__name__)
 
@@ -25,8 +26,8 @@ def obtenir_noticies():
                 "publicat": article["publishedAt"]
             })
 
-        # Afegir ensure_ascii=False per evitar que els caràcters especials es mostrin com \u00f3
-        return jsonify(noticies_formatades, ensure_ascii=False)
+        # Retornem la resposta com la codificació correcta
+        return Response(json.dumps(noticies_formatades, ensure_ascii=False), mimetype='application/json')
     else:
         return jsonify({"error": "No s'han pogut obtenir notícies"}), 500
 
