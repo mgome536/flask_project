@@ -18,7 +18,7 @@ def obtenir_noticies():
         articles = dades.get("articles", [])
 
         noticies_formatades = []
-        for article in articles[:10]:
+        for article in articles[:200]:
             noticies_formatades.append({
                 "títol": article["title"],
                 "descripció": article["description"],
