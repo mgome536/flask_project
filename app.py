@@ -107,5 +107,6 @@ def prediccio():
 
     return jsonify({'tipus_canvi_prediccio': tipus_canvi_prediccio.tolist()})
 
+# Executar l'aplicació
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
+    app.run(debug=True, host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))  # Utilitzar el port dinàmic assignat per Railway
