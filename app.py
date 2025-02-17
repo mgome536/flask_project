@@ -3,7 +3,7 @@ import requests
 import json
 import pandas as pd
 import sqlite3  # Afegit per a la base de dades SQLite3
-from flask import Flask, Response, jsonify
+from flask import Flask, Response, jsonify, request
 from tipus_canvi import obtenir_dades_tipus_canvi, obtenir_tipus_canvi  # Importa les funcions
 from model import preparar_dades, entrenar_model, predir_tipus_canvi  # Importa les funcions del model
 from datetime import datetime  # Afegit per afegir la data de la predicció
@@ -33,6 +33,10 @@ def crear_base_de_dades():
 
 # Cridar la funció per garantir que la taula s'ha creat quan s'iniciï l'aplicació
 crear_base_de_dades()
+
+# Funció per connectar a la base de dades
+def connect_db():
+    return sqlite3.connect('database.db')
 
 # Ruta per obtenir notícies
 @app.route('/noticies', methods=['GET'])
@@ -120,6 +124,25 @@ def prediccio():
 
     # Guardar a la base de dades SQLite3
     conn = sqlite3.connect('prediccions.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO prediccions (data, noticia, tipus_canvi_prediccio)
+        VALUES (?, ?, ?)
+    ''', (datetime.now(), nova_noticia, tipus_canvi_prediccio.tolist()[0]))  # Guardem la primera predicció
+    conn.commit()
+    conn.close()
+
+    return jsonify({'tipus_canvi_prediccio': tipus_canvi_prediccio.tolist()})
+
+# Endpoint per fer prediccions
+@app.route('/predict', methods=['POST'])
+def predict():
+    nova_noticia = request.json['noticia']
+    X_nova_noticia = vectorizer.transform([nova_noticia])
+    tipus_canvi_prediccio = model.predict(X_nova_noticia)
+
+    # Guardar la predicció a la base de dades
+    conn = connect_db()
     cursor = conn.cursor()
     cursor.execute('''
         INSERT INTO prediccions (data, noticia, tipus_canvi_prediccio)

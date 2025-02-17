@@ -3,6 +3,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
+import joblib
 
 # Funció per preparar les dades de les notícies i el tipus de canvi
 def preparar_dades(noticies_df, tipus_canvi_df):
@@ -28,6 +29,10 @@ def entrenar_model(df_final):
     y_pred = model.predict(X_test)
     mse = mean_squared_error(y_test, y_pred)
     print(f'Error quadràtic mitjà: {mse}')
+
+    # Guardar el model i el vectoritzador
+    joblib.dump(model, 'model.pkl')
+    joblib.dump(vectorizer, 'vectorizer.pkl')
 
     return model, vectorizer
 
