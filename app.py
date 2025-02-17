@@ -7,6 +7,7 @@ from flask import Flask, Response, jsonify
 from tipus_canvi import obtenir_dades_tipus_canvi, obtenir_tipus_canvi  # Importa les funcions
 from model import preparar_dades, entrenar_model, predir_tipus_canvi  # Importa les funcions del model
 from datetime import datetime  # Afegit per afegir la data de la predicció
+import joblib  # Afegit per carregar el model i el vectoritzador
 
 app = Flask(__name__)
 
@@ -99,12 +100,20 @@ def entrenar():
     # Entrenar el model
     model, vectorizer = entrenar_model(df_final)
 
+    # Guardar el model i el vectoritzador amb joblib
+    joblib.dump(model, 'model.pkl')  # Guarda el model
+    joblib.dump(vectorizer, 'vectorizer.pkl')  # Guarda el vectoritzador
+
     # Retornar una resposta de confirmació
     return jsonify({'message': 'Model entrenat correctament!'})
 
 # Ruta per fer una predicció i guardar-la a la base de dades
 @app.route('/prediccio', methods=['GET'])
 def prediccio():
+    # Carregar el model i el vectoritzador guardats
+    model = joblib.load('model.pkl')
+    vectorizer = joblib.load('vectorizer.pkl')
+
     # Simulant les dades de la predicció
     nova_noticia = "Nova notícia sobre els mercats financers..."
     tipus_canvi_prediccio = predir_tipus_canvi(model, vectorizer, nova_noticia)
