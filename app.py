@@ -2,14 +2,36 @@ import os
 import requests
 import json
 import pandas as pd
+import sqlite3  # Afegit per a la base de dades SQLite3
 from flask import Flask, Response, jsonify
 from tipus_canvi import obtenir_dades_tipus_canvi, obtenir_tipus_canvi  # Importa les funcions
 from model import preparar_dades, entrenar_model, predir_tipus_canvi  # Importa les funcions del model
+from datetime import datetime  # Afegit per afegir la data de la predicció
 
 app = Flask(__name__)
 
 # API Key de NewsAPI
 API_KEY = "ac4a581e87f749018d8fbc172cadcca6"
+
+# Funció per crear la base de dades SQLite3 i la taula per emmagatzemar les prediccions
+def crear_base_de_dades():
+    conn = sqlite3.connect('prediccions.db')  # Connexió a la base de dades
+    cursor = conn.cursor()
+
+    # Crear la taula per emmagatzemar les prediccions (si no existeix)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS prediccions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            data TEXT,
+            noticia TEXT,
+            tipus_canvi_prediccio REAL
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+# Cridar la funció per garantir que la taula s'ha creat quan s'iniciï l'aplicació
+crear_base_de_dades()
 
 # Ruta per obtenir notícies
 @app.route('/noticies', methods=['GET'])
@@ -80,30 +102,22 @@ def entrenar():
     # Retornar una resposta de confirmació
     return jsonify({'message': 'Model entrenat correctament!'})
 
-# Ruta per fer una predicció
+# Ruta per fer una predicció i guardar-la a la base de dades
 @app.route('/prediccio', methods=['GET'])
 def prediccio():
-    # Carregar les dades de notícies i tipus de canvi (exemple)
-    noticies_df = pd.DataFrame({
-        'data': ['2025-02-01', '2025-02-02'],
-        'títol': ['Notícia 1', 'Notícia 2'],
-        'descripció': ['Descripció de la notícia 1', 'Descripció de la notícia 2']
-    })
-
-    tipus_canvi_df = pd.DataFrame({
-        'data': ['2025-02-01', '2025-02-02'],
-        'tipus_canvi': [1.2, 1.25]
-    })
-
-    # Preparar les dades
-    df_final = preparar_dades(noticies_df, tipus_canvi_df)
-
-    # Entrenar el model (o carregar-lo si és necessari)
-    model, vectorizer = entrenar_model(df_final)
-
-    # Fer una predicció per a la nova notícia
+    # Simulant les dades de la predicció
     nova_noticia = "Nova notícia sobre els mercats financers..."
     tipus_canvi_prediccio = predir_tipus_canvi(model, vectorizer, nova_noticia)
+
+    # Guardar a la base de dades SQLite3
+    conn = sqlite3.connect('prediccions.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO prediccions (data, noticia, tipus_canvi_prediccio)
+        VALUES (?, ?, ?)
+    ''', (datetime.now(), nova_noticia, tipus_canvi_prediccio.tolist()[0]))  # Guardem la primera predicció
+    conn.commit()
+    conn.close()
 
     return jsonify({'tipus_canvi_prediccio': tipus_canvi_prediccio.tolist()})
 
